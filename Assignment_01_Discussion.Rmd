@@ -1,0 +1,29 @@
+---
+title: 'Assignment 01 (Discussion): Vectors - Orthogonality'
+author: "Forhad Akbar"
+date: "01/28/2020"
+output:
+  pdf_document:
+    number_sections: no
+  html_document:
+    df_print: paged
+  prettydoc::html_pretty:
+    pdf_document: default
+    theme: cayman
+---
+## **Problem Statement**  
+The problem M60, selected page 161, "A First Course in Linear Algebra".  
+Suppose that {u, v, w} BELONGS TO C^n is an orthonormal set. Prove that u + v is not orthogonal to v + w.
+
+## **Load Packages**
+
+```{r load-packages, warning = FALSE, message = FALSE}
+library(knitr)
+```
+
+{u, v, w} are orthonormal.  
+Therefore, u.v = 0, v.w = 0 and u.w = 0. And u^2 = 1, v^2 = 1 and w^2 = 1.  
+
+Now, (u + v).(v + w) = u.v + u.w + v^2 + v.w = 0 + 0 + 1 + 0 = 1.  
+Therefore, (u + v).(v + w) = 1 != 0  
+Therefore, (u + v) is not orthogonal to (v + w).
