@@ -1,0 +1,207 @@
+---
+title: 'DATA 605: Homework 02'
+author: "Forhad Akbar"
+date: "02/07/2020"
+output:
+  prettydoc::html_pretty:
+    pdf_document: default
+    theme: cayman
+  html_document:
+    df_print: paged
+  pdf_document:
+    number_sections: no
+---
+## **Load Packages**
+
+```{r load-packages, warning = FALSE, message = FALSE}
+library(knitr)
+library(geometry)
+```
+
+## **1. Problem set 1**  
+
+1. Show that ${ A }^{ T }A\neq A{ A }^{ T }$ in general. (Proof and demonstration.)
+
+Let  
+
+$A=\begin{vmatrix} a & b \\ c & d \end{vmatrix}\quad { A }^{ T }=\begin{vmatrix} a & c \\ b & d \end{vmatrix}$
+
+$A{ A }^{ T }=\begin{vmatrix} a & b \\ c & d \end{vmatrix}\begin{vmatrix} a & c \\ b & d \end{vmatrix}=\begin{vmatrix} { a }^{ 2 }+{ b }^{ 2 } & { a }c+{ b }d \\ ca+db & { c }^{ 2 }+{ d }^{ 2 } \end{vmatrix}$
+
+${ A }^{ T }A=\begin{vmatrix} a & c \\ b & d \end{vmatrix}\begin{vmatrix} a & b \\ c & d \end{vmatrix}=\begin{vmatrix} { a }^{ 2 }+{ c }^{ 2 } & { a }b+cd \\ ba+dc & { b }^{ 2 }+{ d }^{ 2 } \end{vmatrix}$
+
+Therefore, ${ A }^{ T }A\neq A{ A }^{ T }$
+
+Demonstration with example:
+
+$A=\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix}$
+
+and
+
+${ A }^{ T }=\begin{vmatrix} 1 & 3 \\ 2 & 4 \end{vmatrix}$
+
+${ AA }^{ T }=\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix}\begin{vmatrix} 1 & 3 \\ 2 & 4 \end{vmatrix}=\begin{vmatrix} 1+4 & 3+8 \\ 3+8 & 9+16 \end{vmatrix}=\begin{vmatrix} 5 & 11 \\ 11 & 25 \end{vmatrix}$
+
+${ A }^{ T }A=\begin{vmatrix} 1 & 3 \\ 2 & 4 \end{vmatrix}\begin{vmatrix} 1 & 2 \\ 3 & 4 \end{vmatrix}=\begin{vmatrix} 1+9 & 2+12 \\ 2+12 & 4+16 \end{vmatrix}=\begin{vmatrix} 10 & 14 \\ 14 & 20 \end{vmatrix}$
+
+
+Using R
+
+```{r matrix}
+A<- matrix(c(1,2,3,4),nrow = 2, ncol = 2, byrow = T)
+A
+```
+```{r}
+AT= t(A)
+AT
+```
+
+```{r}
+AAT<-A %*% AT
+```
+
+```{r}
+ATA<-AT %*% A
+```
+
+
+```{r}
+# Logic test for entire system
+identical(AAT,ATA)
+```
+
+The identical logical function that tests for exact equality between two objects. We can conclude that ATA and AAT are not identical. This can further be visualized in the output below:
+
+```{r}
+AAT
+```
+
+```{r}
+ATA
+```
+
+```{r}
+AAT==ATA
+```
+
+Therefore we can conclude, ${ A }^{ T }A\neq A{ A }^{ T }$
+
+
+2. For a special type of square matrix A, we get ${ A }^{ T }A={ AA }^{ T }$ . Under what conditions could this be true? (Hint: The Identity matrix I is an example of such a matrix).
+
+This equation can be true when a matrix is square and symmetric. A matrix is symmetric when the inverse of A equals A.
+
+$Proof:\quad A={ A }^{ T }\quad thus\quad { A }^{ T }A=A{ A }^{ T }\quad equals\quad AA=AA$
+
+Demonstration with example:
+
+$A=\begin{vmatrix} 1 & 2 \\ 2 & 1 \end{vmatrix}$
+
+and
+
+${ A }^{ T }=\begin{vmatrix} 1 & 2 \\ 2 & 1 \end{vmatrix}$
+
+
+${ AA }^{ T }=\begin{vmatrix} 1 & 2 \\ 2 & 1 \end{vmatrix}\begin{vmatrix} 1 & 2 \\ 2 & 1 \end{vmatrix}=\begin{vmatrix} 1+4 & 2+2 \\ 2+2 & 4+1 \end{vmatrix}=\begin{vmatrix} 5 & 4 \\ 4 & 5 \end{vmatrix}$
+
+${ A }^{ T }A=\begin{vmatrix} 1 & 2 \\ 2 & 1 \end{vmatrix}\begin{vmatrix} 1 & 2 \\ 2 & 1 \end{vmatrix}=\begin{vmatrix} 1+4 & 2+2 \\ 2+2 & 4+1 \end{vmatrix}=\begin{vmatrix} 5 & 4 \\ 4 & 5 \end{vmatrix}$
+
+Therefore, ${ A }^{ T }A={ AA }^{ T }$ 
+
+Using R
+
+```{r}
+A<- matrix(c(1,2,2,1),nrow = 2, ncol = 2, byrow = T)
+A
+```
+```{r Transpose-Matrix}
+AT= t(A)
+AT
+```
+
+```{r}
+AAT<-A %*% AT
+```
+
+```{r}
+ATA<-AT %*% A
+```
+
+
+```{r}
+# Logic test for entire system
+identical(AAT,ATA)
+```
+
+The identical logical function that tests for exact equality between two objects. We can conclude that ATA and AAT are identical. This can further be visualized in the output below:
+
+```{r}
+AAT
+```
+
+```{r}
+ATA
+```
+
+```{r}
+AAT==ATA
+```
+
+Therefore we can conclude, ${ A }^{ T }A={ AA }^{ T }$ 
+
+## **2. Problem set 2**  
+
+Matrix factorization is a very important problem. There are supercomputers built just to do matrix factorizations. Every second you are on an airplane, matrices are being factorized. Radars that track flights use a technique called Kalman filtering. At the heart of Kalman Filtering is a Matrix Factorization operation. Kalman Filters are solving linear systems of equations when they track your flight using radars. Write an R function to factorize a square matrix A into LU or LDU, whichever you prefer.
+
+```{r}
+lu <- function(A) {
+  # Check that A is square
+  if (dim(A)[1]!=dim(A)[2]) {
+    return(NA)
+  }
+  
+  U <- A
+  n <- dim(A)[1]
+  L <- diag(n)
+  
+  # If dimension is 1, then U=A and L=[1]
+  if (n==1) {
+    return(list(L,U))
+  }
+  
+  # Loop through the lower triangle (by rows and columns)
+  # Determine multiplier for each position and add it to L
+  for(i in 2:n) {
+    for(j in 1:(i-1)) {
+      multiplier <- -U[i,j] / U[j,j]
+      U[i, ] <- multiplier * U[j, ] + U[i, ]
+      L[i,j] <- -multiplier
+    }
+  }
+  return(list(L,U))
+}
+```
+Testing the code on a 3 x 3 matrix
+
+```{r}
+#Generate a random 3x3 matrix:
+A <- matrix(sample(1:20, 9, replace = TRUE), nrow = 3, ncol = 3)
+print(A)
+```
+
+The function returns the following lower form matrix:
+```{r}
+#lower:
+lu(A)[[1]]
+```
+
+The function returns the following upper form matrix:
+```{r}
+#upper:
+lu(A)[[2]]
+```
+Test that the product of the lower and upper form matrices is equal to the original matrix:
+```{r}
+#test: 
+lu(A)[[1]] %*% lu(A)[[2]] == A
+```
