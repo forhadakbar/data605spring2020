@@ -1,0 +1,171 @@
+---
+title: 'DATA 605: Homework 03'
+author: "Forhad Akbar"
+date: "02/12/2020"
+output:
+  prettydoc::html_pretty:
+    pdf_document: default
+    theme: cayman
+  html_document:
+    df_print: paged
+  pdf_document:
+    number_sections: no
+---
+## **Load Packages**
+
+```{r load-packages, warning = FALSE, message = FALSE}
+library(knitr)
+library(pracma)
+```
+
+## **1. Problem set 1**  
+
+1. What is the rank of the matrix A?
+
+$A\quad =\quad \begin{vmatrix} 1 & 2 & 3 & 4 \\ -1 & 0 & 1 & 3 \\ 0 & 1 & -2 & 1 \\ 5 & 4 & -2 & -3 \end{vmatrix}$
+
+The set of pivot columns of any reduced row echelon form matrix is known as Rank.
+
+Transform matrix A to reduced echelon form, which is:
+
+$A\quad =\quad \begin{vmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \end{vmatrix}$
+
+Looking at the resultant matrix, the rank is 4.
+
+Confirming rank using R
+
+```{r}
+A <- matrix(c(1,2,3,4,-1,0,1,3,0,1,-2,1,5,4,-2,-3), nrow=4, byrow=TRUE)
+
+# matrix A
+A
+```
+
+```{r}
+# RREF of A
+library(pracma)
+rref(A)
+```
+
+There are 4 pivot rows, so the rank of A is 4. Double-check with R.
+```{r}
+# Rank of A
+Rank(A)
+```
+
+2. Given an mxn matrix where m > n, what can be the maximum rank? The mini-mum rank, assuming that the matrix is non-zero?  
+
+Since rank of a matrix is defined as the number of linearly independent column vectors and is equal to the number of linearly independent row vectors, given an m×n matrix with m>n, the maximum rank is the lower value ${ rank }_{ max }\quad =\quad n$. Assuming a non-zero matrix, the rank should be at least 1, so ${ rank }_{ min }\quad =\quad 1$.
+
+3. What is the rank of matrix B?
+
+$B\quad =\quad \begin{vmatrix} 1 & 2 & 1 \\ 3 & 6 & 3 \\ 2 & 4 & 2 \end{vmatrix}$
+
+We can see that row 2 and row 3 are multiples of row 1, so rows 1 and 2 and 1 and 3 are linearly dependent. There is only 1 linearly independent row, so $rank(B)\quad =\quad 1$
+
+Confirming rank using R
+```{r}
+B <- matrix(c(1,2,1,3,6,3,2,4,2), nrow=3, byrow=TRUE)
+
+# matrix B
+B
+```
+
+```{r}
+# Rank of B
+Rank(B)
+```
+
+## **2. Problem set 2**
+Compute the eigenvalues and eigenvectors of the matrix A. You'll need to show your work. You'll need to write out the characteristic polynomial and show your solution.
+
+$A\quad =\quad \begin{vmatrix} 1 & 2 & 3 \\ 0 & 4 & 5 \\ 0 & 0 & 6 \end{vmatrix}$
+
+Since, A is a triangular matrix, its eigenvalues are values on the diagonal, so λ1=1, λ2=4 and λ3=6. But i am going to show the work as following
+
+Step 1 - Calculate the eigenvalues of A
+
+$det(A-λI)\quad =\quad 0$  
+
+$det(\begin{vmatrix} 1 & 2 & 3 \\ 0 & 4 & 5 \\ 0 & 0 & 6 \end{vmatrix}-\begin{vmatrix} λ & 0 & 0 \\ 0 & λ & 0 \\ 0 & 0 & 0 \end{vmatrix})\quad =\quad 0$  
+
+$det(\begin{vmatrix} 1-λ & 2 & 3 \\ 0 & 4-λ & 5 \\ 0 & 0 & 6-λ \end{vmatrix})\quad =\quad 0$  
+
+$(1-λ)\quad \begin{vmatrix} 4-λ & 5 \\ 0 & 6-λ \end{vmatrix}\quad =\quad 0$  
+
+$(1−λ)((4−λ)(6−λ)\quad =\quad 0$  
+
+So,The characteristic polynomial is  
+
+$P(λ)=(1−λ)(4−λ)(6−λ)\quad or\quad P(λ)={ λ }^{ 3 }-11{ λ }^{ 2 }+34λ-24$  
+
+We determine that the eigenvalues of A, given by λ, are 1, 4, 6.  
+
+We can use R to confirm the result
+```{r}
+#define matrix
+A = matrix(c(1,0,0, 2,4,0, 3,5,6),ncol = 3)
+
+cp = charpoly(A)
+
+#Characteristic polynomial
+cp
+```
+```{r}
+ev = eigen(A)
+ev$values
+```
+
+Step 2 - Calculate the eigenvectors of A using λ  
+
+Using λ1 = 1:  
+
+$A−λI\quad =\quad \begin{vmatrix} 1−1 & 2 & 3 \\ 0 & 4-1 & 5 \\ 0 & 0 & 6-1 \end{vmatrix}\quad =\quad \begin{vmatrix} 0 & 2 & 3 \\ 0 & 3 & 5 \\ 0 & 0 & 5 \end{vmatrix}$  
+
+Using Gaussian Elimination on the resulting augmented matrix:  
+$\begin{vmatrix} 0 & 2 & 3 & 0 \\ 0 & 3 & 5 & 0 \\ 0 & 0 & 5 & 0 \end{vmatrix}$  
+$R1=1/2(R1)\quad =\quad \begin{vmatrix} 0 & 1 & 3/2 & 0 \\ 0 & 3 & 5 & 0 \\ 0 & 0 & 5 & 0 \end{vmatrix}$  
+$R2\quad =\quad −3(R1)\quad =\quad \begin{vmatrix} 0 & 1 & 3/2 & 0 \\ 0 & 0 & 1/2 & 0 \\ 0 & 0 & 5 & 0 \end{vmatrix}$  
+$R2\quad =\quad 2(R2)\quad =\quad \begin{vmatrix} 0 & 1 & 3/2 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 5 & 0 \end{vmatrix}$  
+$R3\quad =\quad −5(R2)=\quad \begin{vmatrix} 0 & 1 & 3/2 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \end{vmatrix}$  
+$R1\quad =\quad R1−3/2(R2)\quad =\quad \begin{vmatrix} 0 & 1 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \end{vmatrix}$  
+
+For the eigenvalue λ1 = 1, the eigenvector is:  
+
+${ v }_{ 1 }=\quad \begin{pmatrix} { x }_{ 1 } \\ 0 \\ 0 \end{pmatrix}\quad =\quad \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix}$  
+----------------------------------------------------
+Using λ2 = 4:
+
+$A−λI\quad =\quad \begin{vmatrix} 1−4 & 2 & 3 \\ 0 & 4-4 & 5 \\ 0 & 0 & 6-4 \end{vmatrix}\quad =\quad \begin{vmatrix} -3 & 2 & 3 \\ 0 & 0 & 5 \\ 0 & 0 & 2 \end{vmatrix}$  
+
+Using Gaussian Elimination on the resulting augmented matrix:
+
+$\begin{vmatrix} -3 & 2 & 3 & 0 \\ 0 & 0 & 5 & 0 \\ 0 & 0 & 2 & 0 \end{vmatrix}$  
+$R1\quad =\quad −1/3(R1)\quad =\quad \begin{vmatrix} 1 & -2/3 & -1 & 0 \\ 0 & 0 & 5 & 0 \\ 0 & 0 & 2 & 0 \end{vmatrix}$  
+$R2\quad =\quad (R1)/5)\quad =\quad \begin{vmatrix} 1 & -2/3 & -1 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 2 & 0 \end{vmatrix}$  
+$R3\quad =\quad R3−3(R2)\quad =\quad \begin{vmatrix} 1 & -2/3 & -1 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \end{vmatrix}$  
+$R1\quad =\quad R1+R2\quad =\quad \begin{vmatrix} 1 & -2/3 & 0 & 0 \\ 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 0 \end{vmatrix}$  
+Solving the system:
+${ x }_{ 1 }−2/3{ x }_{ 2 }\quad =\quad 0;\quad { x }_{ 1 }\quad =\quad 2/3{ x }_{ 2 }\\ { x }_{ 3 }\quad =\quad 0$  
+
+For the eigenvalue λ2 = 4, the eigenvector is:  
+
+${ v }_{ 2 }\quad =\quad \begin{pmatrix} 2/3{ x }_{ 2 } \\ { x }_{ 2 } \\ 0 \end{pmatrix}\quad =\quad \begin{pmatrix} 2 \\ 3 \\ 0 \end{pmatrix}$  
+----------------------------------------------------
+Using λ3 = 6:
+
+$A−λI\quad =\quad \begin{vmatrix} 1−6 & 2 & 3 \\ 0 & 4-6 & 5 \\ 0 & 0 & 6-6 \end{vmatrix}\quad =\quad \begin{vmatrix} -5 & 2 & 3 \\ 0 & -2 & 5 \\ 0 & 0 & 0 \end{vmatrix}$  
+Using Gaussian Elimination on the resulting augmented matrix:  
+$\begin{vmatrix} -5 & 2 & 3 & 0 \\ 0 & -2 & 5 & 0 \\ 0 & 0 & 0 & 0 \end{vmatrix}$  
+$R1\quad =\quad −1/5(R1)\quad =\quad \begin{vmatrix} 1 & -2/5 & -3/5 & 0 \\ 0 & -2 & 5 & 0 \\ 0 & 0 & 0 & 0 \end{vmatrix}$  
+$R2\quad =\quad −1/2(R2)\quad =\quad \begin{vmatrix} 1 & -2/5 & -3/5 & 0 \\ 0 & 1 & -5/2 & 0 \\ 0 & 0 & 0 & 0 \end{vmatrix}$  
+$R1=R1−2/5(R2)\quad =\quad \begin{vmatrix} 1 & 0 & -8/5 & 0 \\ 0 & 1 & -5/2 & 0 \\ 0 & 0 & 0 & 0 \end{vmatrix}$  
+Solving the system:
+
+${ x }_{ 1 }+0{ x }_{ 2 }-8/5{ x }_{ 3 }\quad =\quad 0\\ { 0x }_{ 1 }+{ x }_{ 2 }-5/2{ x }_{ 3 }\quad =\quad 0$  
+${ x }_{ 1 }=8/5{ x }_{ 3 }\\ { x }_{ 2 }=5/2{ x }_{ 3 }$  
+
+For the eigenvalue λ3 = 6, the eigenvector is:
+
+${ v }_{ 3 }\quad =\quad \begin{pmatrix} 8/5{ x }_{ 3 } \\ 5/2{ x }_{ 3 } \\ 10 \end{pmatrix}\quad =\quad \begin{pmatrix} 16 \\ 25 \\ 10 \end{pmatrix}$  
+----------------------------------------------------
