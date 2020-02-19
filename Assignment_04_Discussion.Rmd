@@ -1,0 +1,35 @@
+---
+title: 'Assignment 04 (Discussion): Chapters LT & R'
+author: "Forhad Akbar"
+date: "02/19/2020"
+output:
+  prettydoc::html_pretty:
+    pdf_document: default
+    theme: cayman
+  html_document:
+    df_print: paged
+  pdf_document:
+    number_sections: no
+---
+
+## **Load Packages**
+
+```{r load-packages, warning = FALSE, message = FALSE}
+library(knitr)
+```
+
+## **Problem Statement**  
+The problem C25, selected page 443,  
+Define the linear transformation
+
+$T\quad :\quad { C }^{ 3 }\rightarrow { C }^{ 2 },\quad T(\begin{bmatrix} { x }_{ 1 } \\ { x }_{ 2 } \\ { x }_{ 3 } \end{bmatrix})\quad =\quad \begin{bmatrix} { 2x }_{ 1 }-{ x }_{ 2 }+5{ x }_{ 3 } \\ -4{ x }+2{ x }_{ 2 }-10{ x }_{ 3 } \end{bmatrix}$  
+
+Verify that T is a linear transformation.
+
+## **Solution**  
+
+Defination of linear transformation: A linear transformation, $T:U\rightarrow V$ , is a function that carries elements of the vector space U (called the domain) to the vector space V (called the codomain).
+
+$T(\begin{bmatrix} { x }_{ 1 } \\ { x }_{ 2 } \\ { x }_{ 3 } \end{bmatrix})\quad =\quad \begin{bmatrix} { 2x }_{ 1 }-{ x }_{ 2 }+5{ x }_{ 3 } \\ -4{ x }+2{ x }_{ 2 }-10{ x }_{ 3 } \end{bmatrix}\\ \quad \quad \quad \quad \quad \quad \quad =\quad { x }_{ 1 }\begin{bmatrix} 2 \\ -4 \end{bmatrix}\quad +\quad { x }_{ 2 }\begin{bmatrix} -1 \\ 2 \end{bmatrix}\quad +\quad { x }_{ 3 }\begin{bmatrix} 5 \\ -10 \end{bmatrix}\\ \quad \quad \quad \quad \quad \quad \quad =\quad \begin{bmatrix} 2 & -1 & 5 \\ -4 & 2 & -10 \end{bmatrix}\begin{bmatrix} { x }_{ 1 } \\ { x }_{ 2 } \\ { x }_{ 3 } \end{bmatrix}$
+
+We can verify from above that T is a linear transformation.
