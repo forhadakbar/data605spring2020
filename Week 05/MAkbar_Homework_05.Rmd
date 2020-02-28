@@ -1,0 +1,156 @@
+---
+title: 'DATA 605: Homework 05'
+author: "Forhad Akbar"
+date: "02/28/2020"
+output:
+  prettydoc::html_pretty:
+    pdf_document: default
+    theme: cayman
+  html_document:
+    df_print: paged
+  pdf_document:
+    number_sections: no
+---
+## **Load Packages**
+
+```{r load-packages, warning = FALSE, message = FALSE}
+library(knitr)
+```
+
+## **Problem set**  
+
+Choose independently two numbers B and C at random from the interval [0, 1] with uniform density. Prove that B and C are proper probability distributions. Note that the point (B,C) is then chosen at random in the unit square.
+
+## **Proof:**
+
+```{r}
+# generate random numbers from a uniform distribution
+set.seed(NULL)
+B <- runif(10000, min = 0, max = 1)  
+
+set.seed(NULL)
+C <- runif(10000, min = 0, max = 1)   
+
+df_b<- as.data.frame(B)
+
+# check whether the probability of B is between 0 and 1
+
+# firsr create a series with all the values as False
+sum_p <- rep(F,times=length(B))
+
+# then calculate the pribability of B
+for (i in 1:length(B)){
+  x=1
+  for (j in 1:length(B)){
+    if (j != i && B[i] == B[j]){
+      x <- x + 1
+    }
+  }
+  p <- x/length(B)
+  # if the probability is between 0 and 1 inclusive, the value in sum_p will change to True correspondingly 
+  sum_p[i] <- (0 <= p && p<= 1) 
+}
+
+condition_1 <- !any(sum_p == F)
+
+print(paste("Is all the probabilities of B is between 0 and 1 inclusive? ",condition_1 ))
+```
+
+```{r}
+print(paste("Similarly, all the probabilities of B is between 0 and 1 inclusive "))
+```
+
+```{r}
+# sum the probability of B and denote as sigma
+sigma_b <- 0
+for (i in 1:length(B)){
+  x=1
+  for (j in 1:length(B)){
+    if (j != i && B[i] == B[j]){
+      x <- x + 1
+    }
+  }
+  p <- x/length(B)
+  sigma_b <- sigma_b + p 
+}
+
+sigma_b
+```
+
+```{r}
+sigma_b <- round(sigma_b)
+
+print(paste("The sum of the probabilities of the outcomes of B is",sigma_b))
+```
+
+```{r}
+print(paste("Similarly,The sum of the probabilities of the outcomes of C is",sigma_b))
+```
+
+For both B or C, all the probabilities is between 0 and 1 inclusive.  
+
+For both B or C,the sum of the probabilities of the outcomes is 1.  
+
+This proof that B and C are proper probability distributions.
+
+
+Find the probability that  
+(a) $B+C<1/2$
+```{r}
+j = 0
+for(i in 1:length(B)){
+  if(B[i]+C[i] < 0.5){
+    j = j+1
+  }
+}
+print(paste("The Probabilty B+C < 1/2 =", j/length(B)))
+```
+
+The probabilty is 12.5%. For this to be true B and C must be <12, which is 0.5∗0.5=0.25 and C or B must be <12−[Compliment] the range where is can be true is [0,0.5]. The overall probabilty is 0.25∗0.5=0.125 which is what we see in the simulation.
+
+(b) $BC<1/2$
+```{r}
+j = 0
+for(i in 1:length(B)){
+  if(B[i]*C[i] < 0.5){
+    j = j+1
+  }
+}
+print(paste("The Probabilty BC < 1/2 =", j/length(B)))
+```
+
+(c) $|B−C|<1/2$
+
+```{r}
+j = 0
+for(i in 1:length(B)){
+  if(abs(B[i]-C[i]) < 0.5){
+    j = j+1
+  }
+}
+print(paste("The Probabilty |B-C| < 1/2 =", j/length(B)))
+```
+
+(d) $max{B,C}<1/2$
+
+```{r}
+j = 0
+for(i in 1:length(B)){
+  if(max(c(B[i],C[i])) < 0.5){
+    j = j+1
+  }
+}
+print(paste("The Probabilty max(B,C) < 1/2 =", j/length(B)))
+```
+
+(e) $min{B,C}<1/2$
+
+```{r}
+j = 0
+for(i in 1:length(B)){
+  if(min(c(B[i],C[i])) < 0.5){
+    j = j+1
+  }
+}
+print(paste("The Probabilty min(B,C) < 1/2 =", j/length(B)))
+```
