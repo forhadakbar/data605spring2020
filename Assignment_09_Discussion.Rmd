@@ -1,0 +1,50 @@
+---
+title: 'Assignment 09 (Discussion): Chapters 9'
+author: "Forhad Akbar"
+date: "03/25/2020"
+output:
+  prettydoc::html_pretty:
+    pdf_document: default
+    theme: cayman
+  html_document:
+    df_print: paged
+  pdf_document:
+    number_sections: no
+---
+
+## **Load Packages**
+
+```{r load-packages, warning = FALSE, message = FALSE}
+library(knitr)
+```
+
+## **Problem Statement**  
+
+Chapter 9, Page 355, Problem 11
+
+A tourist in Las Vegas was attracted by a certain gambling game in which
+the customer stakes 1 dollar on each play; a win then pays the customer
+2 dollars plus the return of her stake, although a loss costs her only her stake. Las Vegas insiders, and alert students of probability theory, know that the probability of winning at this game is 1/4. When driven from the tables by hunger, the tourist had played this game 240 times. Assuming that no near miracles happened, about how much poorer was the tourist upon leaving the casino? What is the probability that she lost no money?
+
+### **Solution**
+
+The expected loss from one round is $0.25. 
+From 240 rounds, it is $60.
+
+What is the probability that she lost no money?  
+Zero. With an expected value of $60, and a standard deviation of sqrt(2400.250.75) = 6.7, a corresponding z score of 60/6.7 = ~8.96, there is approximately zero chance she will have any net winnings.
+
+```{r}
+ExpectedValue = 0.25*2 + 0.75*-1
+ExpectedLosses = ExpectedValue*240
+n = 240
+p = 0.25
+q = 1- p
+stdev = sqrt(n*p*q)
+pnorm(0, mean = -60, sd = stdev)
+```
+
+```{r}
+plot(density(rnorm(240, mean = -60, sd = sqrt(240*0.25*0.75))), 
+     main = "Expected Winnings")
+```
