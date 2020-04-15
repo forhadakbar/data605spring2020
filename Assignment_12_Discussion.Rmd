@@ -1,0 +1,93 @@
+---
+title: 'Assignment 12 (Discussion):'
+author: "Forhad Akbar"
+date: "04/15/2020"
+output:
+  prettydoc::html_pretty:
+    pdf_document: default
+    theme: cayman
+  html_document:
+    df_print: paged
+  pdf_document:
+    number_sections: no
+---
+
+## **Load Packages**
+
+```{r load-packages, warning = FALSE, message = FALSE}
+library(corrplot)
+library(dplyr)
+library(knitr)
+```
+
+## **Problem Statement**  
+
+Using R, build a regression model for data that interests you. Conduct residual analysis. Was the linear model appropriate? Why or why not?
+
+### **Solution**
+
+The data i choose is the heart data from UCI machine learning reprository
+https://archive.ics.uci.edu/ml/index.php
+
+Read Data
+
+```{r}
+heart <- read.csv("https://archive.ics.uci.edu/ml/machine-learning-databases/heart-disease/processed.cleveland.data",header=FALSE,sep=",",na.strings = '?')
+colnames(heart) <- c( "age", "sex", "cp", "trestbps", "chol","fbs", "restecg","thalach","exang", "oldpeak","slope", "ca", "thal", "outcome")
+```
+
+
+```{r}
+heart<- heart[complete.cases(heart),] #Store only Data without missing value
+```
+
+correlation plot
+
+```{r}
+data_frame <- heart %>% select(age,trestbps,chol,thalach,oldpeak)
+M <- cor(data_frame)
+
+col <- colorRampPalette(c("#BB4444", "#EE9988", "#FFFFFF", "#77AADD", "#4477AA"))
+corrplot(M, method="color", col=col(200),  
+         type="upper", order="hclust", 
+         addCoef.col = "black", # Add coefficient of correlation
+         tl.col="black", tl.srt=45, #Text label color and rotation
+         # Combine with significance
+          insig = "blank", 
+         # hide correlation coefficient on the principal diagonal
+         diag=FALSE 
+)
+```
+
+### *Multiple Linear Regression:*
+
+```{r}
+
+#lm(formula = Y(dependent) ~ X1(independent) + X2 + X3 + ..., data=table_name_optional)
+  
+attach(heart)
+
+MLR <- lm(formula = age ~ trestbps + chol + thalach + oldpeak, data=heart)
+
+```
+
+```{r}
+summary(MLR) #compelete summary of the regression analysis
+```
+
+```{r}
+confint(MLR)
+```
+
+## *Residual analysis*
+
+```{r}
+plot(fitted(MLR), resid(MLR))
+```
+
+```{r}
+qqnorm((resid(MLR)))
+qqline((resid(MLR)))
+```
+
+Based on the residual analysis, I would conclude that the linear model is appropriate. From the plots you can see that the points follow a straight line. This tells us that the residuals are normally distributed.
