@@ -1,0 +1,951 @@
+---
+title: "DATA 605 Final Exam"
+author: "Forhad Akbar"
+date: "5/16/2020"
+output:
+  rmdformats::readthedown
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Youtube Link
+
+https://youtu.be/R7U9JuL5BPc
+
+# Libraries
+
+
+```{r, eval=TRUE, message=FALSE, warning=FALSE}
+library(knitr)
+library(kableExtra)
+library(tidyverse)
+library(plyr)
+library(purrr)
+library(corrplot)
+library(rmdformats)
+library(matrixcalc)
+library(MASS)
+library(dplyr)
+library(purrr)
+library(tidyr)
+library(ggplot2)
+library(glmnet)
+library(caret)
+library(dummies)
+library(stringr)
+library(e1071)
+library(xgboost)
+```
+
+ 
+# Problem 1
+
+Using R, generate a random variable X that has 10,000 random uniform numbers from 1 to N, where N can be any number of your choosing greater than or equal to 6.  Then generate a random variable Y that has 10,000 random normal numbers with a mean of $\mu=\sigma=(N+1)/2$  
+
+## Random Variable X
+
+```{r}
+#Setting variable and values
+N <- 10
+#Calculate X
+set.seed(12)
+X <- runif(10000, min = 1, max = N)
+summary(X)
+```
+```{r}
+#Histogram X
+hist(X)
+```
+
+## Random Variable Y
+
+```{r}
+mean <- (N+1)/2
+sd <- (N+1)/2
+Y <- rnorm(X, mean, sd)
+summary(Y)
+```
+
+```{r}
+#Histogram Y
+hist(Y)
+```
+
+## Preview data
+
+```{r}
+#Build data frame
+df <- data.frame(X,Y)
+#Preview data
+kable(data.frame(head(df, n = 10L))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  row_spec(0, bold = T, color = "white", background = "#fc5e5e") %>%
+    scroll_box(width = "100%", height = "200px")
+```
+
+## Probability  
+
+Calculate as a minimum the below probabilities a through c.  Assume the small letter "x" is estimated as the median of the X variable, and the small letter "y" is estimated as the 1st quartile of the Y variable.  Interpret the meaning of all probabilities.
+
+```{r}
+#small letter "x" is estimated as the median of the X variable
+x <- median(X)
+round (x, 2)
+```
+
+```{r}
+#small letter "y" is estimated as the 1st quartile of the Y variable
+y <- quantile(Y, 0.25)
+round (y, 2)
+```
+
+### a.   P(X>x | X>y)		  
+Probability that X is greater than its median given that X is greater than the first quartile of Y
+
+```{r}
+prob_a <- sum(X>x & X>y)/sum(X>y)
+round(prob_a, 2)
+```
+
+### b.  P(X>x, Y>y)		  
+Probability that X is grater than all possible x and Y is greater than all possible y
+
+```{r}
+prob_b <- sum(X>x & Y>y)/length(X)
+round(prob_b, 2)
+```
+
+### c.  P(X<x | X>y)  
+Probability of X greater than its median and greater than the first quantile of Y
+```{r}
+prob_c <- sum(X<x & X>y)/sum(X>y)
+round(prob_c,2)
+```
+
+## Investigate P(X>x and Y>y)=P(X>x)P(Y>y)  
+Investigate whether P(X>x and Y>y)=P(X>x)P(Y>y) by building a table and evaluating the marginal and joint probabilities.
+
+```{r}
+matrix<-matrix( c(sum(X>x & Y<y),sum(X>x & Y>y), sum(X<x & Y<y),sum(X<x & Y>y)), nrow = 2,ncol = 2)
+matrix<-cbind(matrix,c(matrix[1,1]+matrix[1,2],matrix[2,1]+matrix[2,2]))
+matrix<-rbind(matrix,c(matrix[1,1]+matrix[2,1],matrix[1,2]+matrix[2,2],matrix[1,3]+matrix[2,3]))
+Investigate<-as.data.frame(matrix)
+names(Investigate) <- c("X>x","X<x", "Total")
+row.names(Investigate) <- c("Y<y","Y>y", "Total")
+kable(Investigate) %>%
+  kable_styling(bootstrap_options = "bordered") %>%
+  row_spec(0, bold = T, color = "white", background = "#fc5e5e")
+```
+
+```{r}
+prob_matrix<-matrix/matrix[3,3]
+Investigate_p<-as.data.frame(prob_matrix)
+names(Investigate_p) <- c("X>x","X<x", "Total")
+row.names(Investigate_p) <- c("Y<y","Y>y", "Total")
+kable(round(Investigate_p,2)) %>%
+  kable_styling(bootstrap_options = "bordered") %>%
+  row_spec(0, bold = T, color = "white", background = "#fc5e5e")
+```
+
+Compute P(X>x)P(Y>y)
+```{r}
+prob_matrix[3,1]*prob_matrix[2,3]
+```
+
+Compute P(X>x and Y>y)
+```{r}
+round(prob_matrix[2,1],digits = 3)
+```
+
+Since the result, P(X>x and Y>y)=P(X>x)P(Y>y) so it can be conclude that X and Y are independent variables.
+
+## Check to see if independence holds
+
+Check to see if independence holds by using Fisher’s Exact Test and the Chi Square Test.  What is the difference between the two? Which is most appropriate?
+
+H0 : X>x and Y>y are independent events  
+HA : X>x and Y>y are dependent events
+
+```{r}
+fisher.test(matrix,simulate.p.value=TRUE)
+```
+
+```{r}
+chisq.test(matrix, correct=TRUE)
+```
+
+The chi-square test provides the similar results and p values are higher than 0.05 which means we can't reject the H0 (X>x and Y>y are independent events). Therefore, we don't have enough evidence to disprove independence.
+
+Source: https://www.datascienceblog.net/post/statistical_test/contingency_table_tests/
+
+![](./Fisher Vs Chi-squared test.JPG)
+
+According to above source, Generally, Fisher’s exact test is preferable to the chi-squared test because it is an exact test. The chi-squared test should be particularly avoided if there are few observations (e.g. less than 10) for individual cells. Since Fisher’s exact test may be computationally infeasible for large sample sizes and the accuracy of the χ2 test increases with larger number of samples, the χ2 test is a suitable replacement in this case. Another advantage of the χ2 test is that it is more suitable for contingency tables whose dimensionality exceeds 2×2. 
+
+
+
+# Problem 2
+
+Advanced Regression Techniques competition:  https://www.kaggle.com/c/house-prices-advanced-regression-techniques
+
+## Descriptive and Inferential Statistics  
+Provide univariate descriptive statistics and appropriate plots for the training data set.  
+
+  Discuss the meaning of your analysis.  Would you be worried about familywise error? Why or why not?
+
+### Import train data
+
+```{r}
+train<-read.csv('https://raw.githubusercontent.com/forhadakbar/data605spring2020/master/Final_Exam/train.csv')
+```
+
+```{r}
+#Preview data
+kable(data.frame(head(train, n = 10L))) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  row_spec(0, bold = T, color = "white", background = "#fc5e5e") %>%
+    scroll_box(width = "100%", height = "400")
+```
+
+```{r}
+#Descriptive statistics
+kable(psych::describe(train)) %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive")) %>%
+  row_spec(0, bold = T, color = "white", background = "#fc5e5e") %>% scroll_box(width = "100%", height = "100%")
+```
+
+```{r}
+#Summary
+summary(train$SalePrice)
+```
+
+```{r}
+#Histogram
+hist(train$SalePrice, main="Sale Price")
+```
+
+```{r}
+# QQ Plot
+qqnorm(train$SalePrice)
+qqline(train$SalePrice)
+```
+
+### Scatterplot matrix
+Provide a scatterplot matrix for at least two of the independent variables and the dependent variable.
+
+**Independent Variables:**   
+
+LotArea : Lot size in square feet
+
+GarageArea : Size of garage in square feet
+
+YearBuilt : Original construction date
+
+OverallQual : Rates the overall material and finish of the house
+
+**Dependent Variable:**  
+SalePrice : Sale Price of the House
+
+```{r}
+train%>%
+  dplyr::select(SalePrice, LotArea, GarageArea,YearBuilt,OverallQual)%>%
+    mutate(LotArea = log(LotArea),
+         SalePrice = log(SalePrice),
+         GarageArea = log(GarageArea),
+         YearBuilt = log(YearBuilt),
+         OverallQual = log(OverallQual)) %>%
+         pairs(main = 'Scatterplot matrix LotArea, SalePrice, GarageArea, YearBuilt, OverallQual', cex.main=0.7,col="#00AFBB",
+               panel = panel.smooth, cex = 0.7, cex.labels = 1.5, font.labels = 2)
+```
+
+### Correlation matrix
+Derive a correlation matrix for any three quantitative variables in the dataset.  
+
+```{r}
+#Subsetting data
+correlationData<-dplyr::select(train,SalePrice,LotArea,BsmtUnfSF,GarageArea,YearBuilt,OverallQual,FullBath,TotalBsmtSF,GrLivArea,Fireplaces)
+correlationMatrix<-round(cor(correlationData),4)
+#Correlation plot
+corrplot(correlationMatrix,method ="color")
+```
+
+### Hypotheses Test
+Test the hypotheses that the correlations between each pairwise set of variables is 0 and provide an 80% confidence interval.
+
+H0 = There is 0 correlation between each pairwise variables
+
+HA = There is correlation between each pairwise variables
+
+**SalePrice vs LotArea**
+
+```{r}
+cor.test(correlationData$SalePrice,correlationData$LotArea, conf.level = 0.8)
+```
+
+With a low P value, we are confident the correlation between these two variables is not zero, and we are 80% confident it is between 0.2323391 and 0.2947946
+
+**SalePrice vs Overall Quality**
+
+```{r}
+cor.test(correlationData$SalePrice,correlationData$OverallQual, conf.level = 0.8)
+```
+
+With a low P value, we are confident the correlation between these two variables is not zero, and we are 80% confident it is between 0.7780752 and 0.8032204
+
+**SalePrice vs Total Basement Square Feet**
+
+```{r}
+cor.test(correlationData$SalePrice,correlationData$TotalBsmtSF, conf.level = 0.8)
+```
+
+With a low P value, we are confident the correlation between these two variables is not zero, and we are 80% confident it is between 0.5922142 and 0.6340846
+
+**SalePrice vs GarageArea**
+
+```{r}
+cor.test(correlationData$SalePrice,correlationData$GarageArea, conf.level = 0.8)
+```
+
+With a low P value, we are confident the correlation between these two variables is not zero, and we are 80% confident it is between 0.6024756  and 0.6435283
+
+### Analysis Observation  
+
+All four confidence intervals have p-values less than 0.5 which means that the null hypothesis could be rejected. Possibility of familywise error is going to be high since we’re only executing a single experiment so probability wil be higher. Familywise error on type I errors when performing multiple hypotheses tests. This problem can be avoid by ajusting the correlation test to a confident level of higher percentage.
+
+## Linear Algebra and Correlation
+
+### Invert your correlation matrix from above
+
+Invert your correlation matrix from above. (This is known as the precision matrix and contains variance inflation factors on the diagonal.) 
+
+```{r}
+precisionMatrix<-solve(correlationMatrix)
+round(precisionMatrix,4)
+```
+
+### Multiply the correlation matrix by the precision matrix, and then multiply the precision matrix by the correlation matrix  
+
+```{r}
+round(correlationMatrix %*% precisionMatrix,4)
+```
+
+```{r}
+round(precisionMatrix %*% correlationMatrix,4)
+```
+
+### Conduct LU decomposition on the matrix  
+
+```{r}
+solve.LDU<-function(A,D=FALSE) {
+  #build unity matrix b
+  b<-matrix(nrow = nrow(A),ncol = ncol(A))
+  for(j in 1:ncol(A)) {
+    for(i in 1:nrow(A)) {
+      if(i==j) b[i,j]<-1  else b[i,j]=0
+    }
+  }
+  #alternatively b could have been defined by b<-diag(ncol(A))
+  Ab<-cbind(A,b)
+  for(row in 1:(nrow(Ab)-1)){
+    col=row
+    for(next.row in (row+1):nrow(Ab)) {
+      multiplier<-Ab[next.row,col]/Ab[row,col]
+      Ab[next.row,]<-Ab[next.row,]-(multiplier*Ab[row,])
+    }
+  }
+  ru<-Ab[,1:ncol(A)]
+  rl<-solve(Ab[,(ncol(A)+1):ncol(Ab)])
+  if(D) {
+      Ab<-ru
+      rd<-diag(diag(ru))
+      for(row in 1:nrow(Ab)) {
+        Ab[row,]=Ab[row,]/Ab[row,row]  
+      }
+      rup<-Ab
+      result<-list(rl,rd,rup)
+      return(result)
+  } else {
+      result<-list(rl,ru)
+      return(result)
+  }
+}
+
+r<-solve.LDU(correlationMatrix)
+L<-r[[1]]
+U<-r[[2]]
+L
+```
+
+```{r}
+print(U)
+```
+
+```{r}
+print(L %*% U)
+```
+
+We can confirm the decomposition by comparing to our original matrix correlationMatrix
+
+```{r}
+round(L %*% U ,4)== round(correlationMatrix,4)
+```
+
+## Calculus-Based Probability & Statistics  
+
+Many times, it makes sense to fit a closed form distribution to data.  Select a variable in the Kaggle.com training dataset that is skewed to the right, shift it so that the minimum value is absolutely above zero if necessary.  Then load the MASS package and run fitdistr to fit an exponential probability density function.  (See  https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/fitdistr.html ).
+
+Luckily based on experimentation, I found that the Finished Basement Square Footage is found to be skewed to the right as evidenced by its resultant histogram shown below.
+
+```{r}
+hist(train$TotalBsmtSF)
+```
+
+```{r}
+toFit<-train$TotalBsmtSF
+min(toFit)
+```
+
+Run fitdistr to fit an exponential probability density function
+```{r}
+lambda <- fitdistr(toFit, "exponential")
+lambda
+```
+
+Find the optimal value of λ for this distribution, and then take 1000 samples from this exponential distribution using this value. Plot a histogram and compare it with a histogram of your original variable. 
+
+```{r}
+lambda$estimate
+```
+
+```{r}
+l<-lambda$estimate
+sim<- rexp(1000,l)
+hist(sim,breaks = 100)
+```
+
+```{r}
+hist(toFit,breaks=100)
+```
+
+```{r}
+sim.df <- data.frame(length = sim)
+toFit.df <- data.frame(length = toFit)
+
+sim.df$from <- 'sim'
+toFit.df$from <- 'toFit'
+
+both.df <- rbind(sim.df,toFit.df)
+
+ggplot(both.df, aes(length, fill = from)) + geom_density(alpha = 0.2)
+```
+
+Using the exponential pdf, find the 5th and 95th percentiles using the cumulative distribution function (CDF).
+
+```{r}
+quantile(sim, probs=c(0.05, 0.95))
+hist(toFit,breaks=100)
+```
+
+Also generate a 95% confidence interval from the empirical data, assuming normality.
+
+```{r}
+mean(toFit)
+```
+
+```{r}
+normal<-rnorm(length(toFit),mean(toFit),sd(toFit))
+hist(normal)
+```
+
+```{r}
+quantile(normal, probs=c(0.05, 0.95))
+```
+
+```{r}
+normal.df <- data.frame(length = normal)
+
+normal.df$from <- 'normal'
+
+all.df <- rbind(both.df,normal.df)
+
+ggplot(all.df, aes(length, fill = from)) + geom_density(alpha = 0.2)
+```
+
+Finally, provide the empirical 5th percentile and 95th percentile of the data. Discuss.
+
+```{r}
+quantile(toFit, probs=c(0.05, 0.95))
+```
+
+From this analysis it appears the data select was not very right skew. The exponential simulation does not match our data very well, rather, our selected empirical data matches the normal distribution a lot better. This can be seen in the final density plot, but also on the confidence interval where the limits are much closer than for the exponential approximation.
+
+## Modeling  
+Build some type of multiple regression model and submit your model to the competition board. Provide your complete model summary and results with analysis. Report your Kaggle.com user name and score.
+
+```{r}
+#select all the quantitative variables and eliminate the ones with low correlations
+quantitative_data <- data.frame(train$LotArea,train$OverallQual,train$YearBuilt,train$YearRemodAdd,train$MasVnrArea,train$BsmtFinSF1,train$TotalBsmtSF,train$X1stFlrSF,train$X2ndFlrSF,train$GrLivArea,train$FullBath,train$TotRmsAbvGrd,train$Fireplaces,train$GarageCars,train$GarageArea,train$WoodDeckSF,train$OpenPorchSF,train$SalePrice) 
+
+#create a linear regression model
+model1 <- lm(train.SalePrice ~.,data = quantitative_data )
+summary(model1)
+```
+
+```{r}
+#eliminate variables based on significant level
+quantitative_data2 <- data.frame(train$LotArea,train$OverallQual,train$YearRemodAdd,train$MasVnrArea,train$BsmtFinSF1,train$TotalBsmtSF,train$Fireplaces,train$GarageCars,train$WoodDeckSF,train$SalePrice)
+colnames(quantitative_data2) <- c("LotArea","OverallQual","YearRemodAdd","MasVnrArea","BsmtFinSF1","TotalBsmtSF","Fireplaces","GarageCars","WoodDeckSF","SalePrice")
+
+#create a linear regression model
+model2 <- lm(SalePrice ~.,data = quantitative_data2)
+summary(model2)
+```
+
+After the second pass, we have arrived at out final model, luckily. It appears that all variables listed have p-values are less than 0.05. Moreover, the Adjusted R-Squared and Multiple R-Squared values are close to 0.746 indicating a stable linear model.
+
+```{r}
+#hist
+hist(model2$residuals,breaks = 200)
+```
+
+```{r}
+#QQ plot
+qqnorm(model2$residuals)
+qqline(model2$residuals)
+```
+
+### Import test data 
+```{r}
+#Fetch test data
+test<-read.csv('https://raw.githubusercontent.com/forhadakbar/data605spring2020/master/Final_Exam/test.csv')
+test[complete.cases(test),]
+```
+
+### Predict and get a result as .csv
+
+```{r}
+#predicting
+pred <- predict(model2,test)
+
+#kaggle Score
+kaggle <- data.frame( Id = test[,"Id"],  SalePrice =pred)
+kaggle[kaggle<0] <- 0
+kaggle <- replace(kaggle,is.na(kaggle),0)
+write.csv(kaggle, file="kaggle.csv", row.names = FALSE)
+```
+
+
+# Another Approach 
+Took another approach to clean the dataset and use different wrangling methond along with a different model to improve the score.
+
+```{r Load Data}
+training_data = read.csv(file = file.path("train.csv"))
+test_data = read.csv(file = file.path("test.csv"))
+```
+
+## Join datasets
+
+```{r Joinning datasets}
+test_data$SalePrice <- 0
+dataset <- rbind(training_data, test_data)
+```
+
+# Feature Engineering
+
+## Hunting NA's
+Our dataset is filled with missing values, therefore, before we can build any predictive model we'll clean our data by filling in all NA's with more appropriate values.
+
+Counting columns with null values.
+
+```{r NAs discovery}
+na.cols <- which(colSums(is.na(dataset)) > 0)
+sort(colSums(sapply(dataset[na.cols], is.na)), decreasing = TRUE)
+paste('There are', length(na.cols), 'columns with missing values')
+```
+
+First, we deal with numerical values. According to the documentation we can safely assume that `NAs` in these variables means 0.
+
+```{r Train NA Imputation for Numeric Values}
+# LotFrontage : NA most likely means no lot frontage
+dataset$LotFrontage[is.na(dataset$LotFrontage)] <- 0
+dataset$MasVnrArea[is.na(dataset$MasVnrArea)] <- 0
+dataset$BsmtFinSF1[is.na(dataset$BsmtFinSF1)] <- 0
+dataset$BsmtFinSF2[is.na(dataset$BsmtFinSF2)] <- 0
+dataset$BsmtUnfSF[is.na(dataset$BsmtUnfSF)] <- 0
+dataset$TotalBsmtSF[is.na(dataset$TotalBsmtSF)] <- 0
+dataset$BsmtFullBath[is.na(dataset$BsmtFullBath)] <- 0
+dataset$BsmtHalfBath[is.na(dataset$BsmtHalfBath)] <- 0
+dataset$GarageCars[is.na(dataset$GarageCars)] <- 0
+dataset$GarageArea[is.na(dataset$GarageArea)] <- 0
+```
+
+One special case is the variable "GarageYrBlt". We can assume that the year that the garage was built is the same than when the house itself was built.
+
+```{r }
+dataset$GarageYrBlt[is.na(dataset$GarageYrBlt)] <- dataset$YearBuilt[is.na(dataset$GarageYrBlt)]
+```
+
+```{r }
+summary(dataset$GarageYrBlt)
+```
+
+Typo!
+
+```{r}
+dataset$GarageYrBlt[dataset$GarageYrBlt==2207] <- 2007
+```
+
+Now we deal with `NAs` in categorical values.
+
+`NAs` in this dataset might be due to: 
+
+1) Missing data. 
+
+2) Empty values for this feature (for instance, a house does not have Garage).
+
+Firstly, we'll address "real" NAs, that is, values which are actually missing. To that end, we will impute them with the most common value for this feature.
+
+```{r}
+dataset$KitchenQual[is.na(dataset$KitchenQual)] <- names(sort(-table(dataset$KitchenQual)))[1]
+dataset$MSZoning[is.na(dataset$MSZoning)] <- names(sort(-table(dataset$MSZoning)))[1]
+dataset$SaleType[is.na(dataset$SaleType)] <- names(sort(-table(dataset$SaleType)))[1]
+dataset$Exterior1st[is.na(dataset$Exterior1st)] <- names(sort(-table(dataset$Exterior1st)))[1]
+dataset$Exterior2nd[is.na(dataset$Exterior2nd)] <- names(sort(-table(dataset$Exterior2nd)))[1]
+dataset$Functional[is.na(dataset$Functional)] <- names(sort(-table(dataset$Functional)))[1]
+```
+
+For empty values, we just change the `NA` value to a new value - 'No'.
+
+```{r}
+# For the rest we change NAs to their actual meaning
+dataset$Alley = factor(dataset$Alley, levels=c(levels(dataset$Alley), "No"))
+dataset$Alley[is.na(dataset$Alley)] = "No"
+# Bsmt : NA for basement features is "no basement"
+dataset$BsmtQual = factor(dataset$BsmtQual, levels=c(levels(dataset$BsmtQual), "No"))
+dataset$BsmtQual[is.na(dataset$BsmtQual)] = "No"
+dataset$BsmtCond = factor(dataset$BsmtCond, levels=c(levels(dataset$BsmtCond), "No"))
+dataset$BsmtCond[is.na(dataset$BsmtCond)] = "No"
+dataset$BsmtExposure[is.na(dataset$BsmtExposure)] = "No"
+dataset$BsmtFinType1 = factor(dataset$BsmtFinType1, levels=c(levels(dataset$BsmtFinType1), "No"))
+dataset$BsmtFinType1[is.na(dataset$BsmtFinType1)] = "No"
+dataset$BsmtFinType2 = factor(dataset$BsmtFinType2, levels=c(levels(dataset$BsmtFinType2), "No"))
+dataset$BsmtFinType2[is.na(dataset$BsmtFinType2)] = "No"
+# Fence : NA means "no fence"
+dataset$Fence = factor(dataset$Fence, levels=c(levels(dataset$Fence), "No"))
+dataset$Fence[is.na(dataset$Fence)] = "No"
+# FireplaceQu : NA means "no fireplace"
+dataset$FireplaceQu = factor(dataset$FireplaceQu, levels=c(levels(dataset$FireplaceQu), "No"))
+dataset$FireplaceQu[is.na(dataset$FireplaceQu)] = "No"
+# Garage : NA for garage features is "no garage"
+dataset$GarageType = factor(dataset$GarageType, levels=c(levels(dataset$GarageType), "No"))
+dataset$GarageType[is.na(dataset$GarageType)] = "No"
+dataset$GarageFinish = factor(dataset$GarageFinish, levels=c(levels(dataset$GarageFinish), "No"))
+dataset$GarageFinish[is.na(dataset$GarageFinish)] = "No"
+dataset$GarageQual = factor(dataset$GarageQual, levels=c(levels(dataset$GarageQual), "No"))
+dataset$GarageQual[is.na(dataset$GarageQual)] = "No"
+dataset$GarageCond = factor(dataset$GarageCond, levels=c(levels(dataset$GarageCond), "No"))
+dataset$GarageCond[is.na(dataset$GarageCond)] = "No"
+# MasVnrType : NA most likely means no veneer
+dataset$MasVnrType = factor(dataset$MasVnrType, levels=c(levels(dataset$MasVnrType), "No"))
+dataset$MasVnrType[is.na(dataset$MasVnrType)] = "No"
+# MiscFeature : NA = "no misc feature"
+dataset$MiscFeature = factor(dataset$MiscFeature, levels=c(levels(dataset$MiscFeature), "No"))
+dataset$MiscFeature[is.na(dataset$MiscFeature)] = "No"
+# PoolQC : data description says NA means "no pool"
+dataset$PoolQC = factor(dataset$PoolQC, levels=c(levels(dataset$PoolQC), "No"))
+dataset$PoolQC[is.na(dataset$PoolQC)] = "No"
+# Electrical : NA means "UNK"
+dataset$Electrical = factor(dataset$Electrical, levels=c(levels(dataset$Electrical), "UNK"))
+dataset$Electrical[is.na(dataset$Electrical)] = "UNK"
+# GarageYrBlt: It seems reasonable that most houses would build a garage when the house itself was built.
+idx <- which(is.na(dataset$GarageYrBlt))
+dataset[idx, 'GarageYrBlt'] <- dataset[idx, 'YearBuilt']
+```
+
+We remove meaningless features and incomplete cases.
+
+```{r NA transformation}
+dataset$Utilities <- NULL
+dataset$Id <- NULL
+```
+
+We now check again if we have null values.
+
+```{r }
+na.cols <- which(colSums(is.na(dataset)) > 0)
+paste('There are now', length(na.cols), 'columns with missing values')
+```
+
+## Outliers
+
+Let's plot these features against the target variable
+
+```{r Dealing with outliers}
+plot(training_data$SalePrice, training_data$GrLivArea)
+plot(training_data$SalePrice, training_data$LotArea)
+plot(training_data$SalePrice, training_data$X1stFlrSF)
+plot(training_data$SalePrice, training_data$X2ndFlrSF)
+plot(training_data$SalePrice, training_data$LowQualFinSF)
+plot(training_data$SalePrice, training_data$TotalBsmtSF)
+plot(training_data$SalePrice, training_data$MiscVal)
+```
+
+By reviewing the plots we see that `X2ndFlrSF` does not have significant outliers. `MiscVal` and `LowQualFinSF` does not present outliers as such. 
+
+We transform the rest of the outliers by assigning them the mean of each variable.
+
+```{r}
+dataset$GrLivArea[dataset$GrLivArea>4000] <- mean(dataset$GrLivArea)%>%as.numeric
+dataset$LotArea[dataset$LotArea>35000] <- mean(dataset$LotArea)%>%as.numeric
+dataset$X1stFlrSF[dataset$X1stFlrSF>3000] <- mean(dataset$X1stFlrSF)%>%as.numeric
+dataset$TotalBsmtSF[dataset$TotalBsmtSF>2900] <- mean(dataset$TotalBsmtSF)%>%as.numeric
+```
+
+## Character variables into continuous numerical variables
+
+There are some categories which are clearly a ranking.
+
+```{r Character values into numerical factors}
+dataset$ExterQual<- recode(dataset$ExterQual,"None"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=18)
+dataset$ExterCond<- recode(dataset$ExterCond,"None"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=6)
+dataset$BsmtQual<- recode(dataset$BsmtQual,"No"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=18)
+dataset$BsmtCond<- recode(dataset$BsmtCond,"No"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=6)
+dataset$BsmtExposure<- recode(dataset$BsmtExposure,"No"=0,"No"=1,"Mn"=2,"Av"=3,"Gd"=6)
+dataset$BsmtFinType1<- recode(dataset$BsmtFinType1,"No"=0,"Unf"=1,"LwQ"=2,"Rec"=3,"BLQ"=4,"ALQ"=5,"GLQ"=6)
+dataset$BsmtFinType2<- recode(dataset$BsmtFinType2,"No"=0,"Unf"=1,"LwQ"=2,"Rec"=3,"BLQ"=4,"ALQ"=5,"GLQ"=6)
+dataset$HeatingQC<- recode(dataset$HeatingQC,"None"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=5)
+dataset$KitchenQual<- recode(dataset$KitchenQual,"None"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=6)
+dataset$Functional<- recode(dataset$Functional,"None"=0,"Sev"=1,"Maj2"=2,"Maj1"=3,"Mod"=4,"Min2"=5,"Min1"=6,"Typ"=7)
+dataset$FireplaceQu<- recode(dataset$FireplaceQu,"No"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=6)
+dataset$GarageFinish<- recode(dataset$GarageFinish,"No"=0,"Unf"=1,"RFn"=2,"Fin"=3)
+dataset$GarageQual<- recode(dataset$GarageQual,"No"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=18)
+dataset$GarageCond<- recode(dataset$GarageCond,"No"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=6)
+dataset$PoolQC<- recode(dataset$PoolQC,"No"=0,"Po"=1,"Fa"=2,"TA"=3,"Gd"=4,"Ex"=6)
+dataset$Fence<- recode(dataset$Fence,"No"=0,"MnWw"=1,"GdWo"=2,"MnPrv"=3,"GdPrv"=6)
+```
+
+In addition to capture their ranking meaning, we are going to create a new binary feature for each one of them to reward good and penalize bad qualities and conditions
+
+```{r}
+dataset['IsExterQualBad'] <- ifelse(dataset$ExterQual< 3, 1, 0)
+dataset['IsExterCondlBad'] <- ifelse(dataset$ExterCond< 3, 1, 0)
+dataset['IsBsmtQualBad'] <- ifelse(dataset$BsmtQual< 3, 1, 0)
+dataset['IsBsmtCondBad'] <- ifelse(dataset$BsmtCond< 3, 1, 0)
+dataset['IsBsmtExposureBad'] <- ifelse(dataset$BsmtExposure< 3, 1, 0)
+dataset['IsHeatingQCBad'] <- ifelse(dataset$HeatingQC< 3, 1, 0)
+dataset['IsKitchenQualBad'] <- ifelse(dataset$KitchenQual< 3, 1, 0)
+dataset['IsFireplaceQuBad'] <- ifelse(dataset$FireplaceQu< 3, 1, 0)
+dataset['IsGarageQualBad'] <- ifelse(dataset$GarageQual< 3, 1, 0)
+dataset['IsGarageCondBad'] <- ifelse(dataset$GarageCond< 3, 1, 0)
+dataset['IsPoolQCBad'] <- ifelse(dataset$PoolQC< 3, 1, 0)
+dataset['IsExterQualGood'] <- ifelse(dataset$ExterQual >= 3, 1, 0)
+dataset['IsExterCondlGood'] <- ifelse(dataset$ExterCond >= 3, 1, 0)
+dataset['IsBsmtQualGood'] <- ifelse(dataset$BsmtQual >= 3, 1, 0)
+dataset['IsBsmtCondGood'] <- ifelse(dataset$BsmtCond >= 3, 1, 0)
+dataset['IsBsmtExposureGood'] <- ifelse(dataset$BsmtExposure >= 3, 1, 0)
+dataset['IsHeatingQCGood'] <- ifelse(dataset$HeatingQC >= 3, 1, 0)
+dataset['IsKitchenQualGood'] <- ifelse(dataset$KitchenQual >= 3, 1, 0)
+dataset['IsFireplaceQuGood'] <- ifelse(dataset$FireplaceQu >= 3, 1, 0)
+dataset['IsGarageQualGood'] <- ifelse(dataset$GarageQual >= 3, 1, 0)
+dataset['IsGarageCondGood'] <- ifelse(dataset$GarageCond >= 3, 1, 0)
+dataset['IsPoolQCGood'] <- ifelse(dataset$PoolQC >= 3, 1, 0)
+```
+
+## New features
+
+```{r New variables}
+# Has been the house remodeled?: If the YearBuilt is different than the remodel year
+dataset['HasBeenRemodeled'] <- ifelse(dataset$YearRemodAdd == dataset$YearBuilt, 0, 1)
+# Has been the house been remodelled after the year it was sold?
+dataset['HasBeenRecentlyRemodeled'] <- ifelse(dataset$YearRemodAdd == dataset$YrSold, 0, 1) 
+# Has been the house sold the year it was built
+dataset['IsNewHouse'] <-ifelse(dataset$YearBuilt == dataset$YrSold, 1, 0) 
+# How old it is
+dataset['Age'] <- as.numeric(2010 - dataset$YearBuilt)
+# Time since last selling
+dataset['TimeSinceLastSelling'] <- as.numeric(2010 - dataset$YrSold)
+# Time since remodeled and sold 
+dataset['TimeSinceRemodeledAndSold'] <- as.numeric(dataset$YrSold - dataset$YearRemodAdd)
+areas <- c('LotFrontage', 'LotArea', 'MasVnrArea', 'BsmtFinSF1', 'BsmtFinSF2', 'BsmtUnfSF',
+               'TotalBsmtSF', 'X1stFlrSF', 'X2ndFlrSF', 'GrLivArea', 'GarageArea', 'WoodDeckSF', 
+               'OpenPorchSF', 'EnclosedPorch', 'X3SsnPorch', 'ScreenPorch', 'LowQualFinSF', 'PoolArea')
+# Total surface of the house, combining the area-related features
+dataset['TotalSF'] <- as.numeric(rowSums(dataset[,areas]))
+# Total surface of the house, combining the total inside surfacae
+dataset['TotalInsideSF'] <- as.numeric(dataset$X1stFlrSF + dataset$X2ndFlrSF)
+# There are more number of sales in April, May, June and July, which may indicate some stationality. we create a new variable indicating that the house has been sold in one of these months
+dataset['IsHotMonth'] = recode(dataset$MoSold,"1"=0,"2"=0,"3"=0,"4"=1,"5"=1, "6"=1, "7"=1, "8"=0, "9"=0, "10"=0, "11"=0, "12"=0)
+```
+
+## Binarizing Features
+
+There are some variables that can be encoded as binary because they mostly present a unique value.
+
+For instance, If we take a look to the `LotShape` value distribution, we can see that there are mainly two values: The house has or does not have a regular shape. Therefore, we can binarize these values according to this criteria.
+
+```{r}
+plot(dataset$LotShape)
+dataset$IsRegLotShape <- ifelse(dataset$LotShape == 'Reg', 1, 0)
+```
+
+Similarly, we can binarize other values that present the same situation
+
+```{r}
+plot(dataset$LandContour)
+dataset['IsLandLvl'] <- ifelse(dataset$LandContour == 'Lvl', 1, 0)
+``` 
+
+```{r}
+plot(dataset$LandSlope)
+dataset['IsLandSlopeGtl'] <-  ifelse(dataset$LandSlope == 'Gtl', 1, 0)
+```
+
+```{r}
+plot(dataset$PavedDrive)
+dataset['HasPavedDrive'] <-  ifelse(dataset$PavedDrive == 'Y', 1, 0)
+```
+
+```{r}
+plot(dataset$Electrical)
+dataset['IsElectricalSBrkr'] <- ifelse(dataset$Electrical == 'SBrkr', 1, 0)
+```
+
+We can also binarize area-related features.
+
+```{r }
+area_features <- c('X2ndFlrSF', 'MasVnrArea', 'WoodDeckSF', 'OpenPorchSF', 'EnclosedPorch', 'X3SsnPorch', 'ScreenPorch', 'WoodDeckSF')
+for (area_feature in area_features){
+  dataset[str_c('Has',area_feature)] <- ifelse(dataset[,area_feature] != 0, 1, 0)
+}
+```
+
+We expect "rich" neighborhoods to include expensive houses.
+
+Therefore, I've create two new features. A binary feature to indicate if the house is in a rich neighborhood and a numerical feature to codify the ranking of the neighborhoods according to their median house value.
+
+```{r warning=FALSE, message=FALSE}
+training_data[,c('Neighborhood','SalePrice')] %>%
+  group_by(Neighborhood) %>%
+  summarise(avg = median(SalePrice, na.rm = TRUE)) %>%
+  arrange(avg) %>%
+  mutate(sorted = factor('Neighborhood', levels='Neighborhood')) %>%
+  ggplot(aes(x=sorted, y=avg)) +
+  geom_bar(stat = "identity") + 
+  labs(x='Neighborhood', y='Price') +
+  ylim(NA, 350000) + 
+  theme(axis.text.x = element_text(angle=90)) 
+richNeighborhood <- c('Crawfor', 'ClearCr', 'Veenker', 'Somerst', 'Timber', 'StoneBr', 'NridgeHt', 'NoRidge')
+dataset['IsNeighborhoodRich'] <- (dataset$Neighborhood %in% richNeighborhood) *1
+dataset$NeighborhoodScored <- recode(dataset$Neighborhood, 'MeadowV' = 0, 'IDOTRR' = 0, 'Sawyer' = 1, 'BrDale' = 1, 'OldTown' = 1, 'Edwards' = 1, 'BrkSide' = 1, 'Blueste' = 2, 'SWISU' = 2, 'NAmes' = 2, 'NPkVill' = 2, 'Mitchel' = 2,'SawyerW' = 3, 'Gilbert' = 3, 'NWAmes' = 3, 'Blmngtn' = 3, 'CollgCr' = 3, 'ClearCr' = 3, 'Crawfor' = 3, 'Veenker' = 4, 'Somerst' = 4, 'Timber' = 4, 'StoneBr' = 5, 'NoRidge' = 6, 'NridgHt' = 6)
+```
+
+
+## Polynomic degrees of more correlated features
+
+There are some features which are more related to the target variable. 
+
+```{r}
+dataset["OverallQual-s2"] <- sapply(dataset$OverallQual, function(x){x**2})
+dataset["OverallQual-s3"] <- sapply(dataset$OverallQual, function(x){x**3})
+dataset["OverallQual-Sq"] <- sqrt(dataset["OverallQual"])
+dataset["TotalSF-2"] <- sapply(dataset$TotalSF, function(x){x**2})
+dataset["TotalSF-3"] = sapply(dataset$TotalSF, function(x){x**3})
+dataset["TotalSF-Sq"] = sqrt(dataset["TotalSF"])
+dataset["GrLivArea-2"] = sapply(dataset$GrLivArea, function(x){x**2})
+dataset["GrLivArea-3"] = sapply(dataset$GrLivArea, function(x){x**3})
+dataset["GrLivArea-Sq"] = sqrt(dataset["GrLivArea"])
+dataset["ExterQual-2"] = sapply(dataset$ExterQual, function(x){x**2})
+dataset["ExterQual-3"] = sapply(dataset$ExterQual, function(x){x**3})
+dataset["ExterQual-Sq"] = sqrt(dataset["ExterQual"])
+dataset["GarageCars-2"] = sapply(dataset$GarageCars, function(x){x**2})
+dataset["GarageCars-3"] = sapply(dataset$GarageCars, function(x){x**3})
+dataset["GarageCars-Sq"] = sqrt(dataset["GarageCars"])
+dataset["KitchenQual-2"] = sapply(dataset$KitchenQual, function(x){x**2})
+dataset["KitchenQual-3"] = sapply(dataset$KitchenQual, function(x){x**3})
+dataset["KitchenQual-Sq"] = sqrt(dataset["KitchenQual"])
+```
+
+## Factorize features
+
+Some numerical features are actually categories.
+
+```{r Factorize features}
+dataset$MSSubClass <- as.factor(dataset$MSSubClass)
+dataset$MoSold <- as.factor(dataset$MoSold)
+dataset$YrSold <- as.factor(dataset$YrSold)
+```
+
+## Skewness
+
+Transform the target value applying log for official scoring.
+
+```{r Log transform the target for official scoring}
+dataset$SalePrice <- log(dataset$SalePrice)
+```
+
+```{r }
+column_types <- sapply(names(dataset),function(x){class(dataset[[x]])})
+numeric_columns <-names(column_types[column_types != "factor"])
+skew <- sapply(numeric_columns,function(x){skewness(dataset[[x]],na.rm = T)})
+dkskew <- skew[skew > 0.75]
+for (x in names(skew)) {
+  bc = BoxCoxTrans(dataset[[x]], lambda = 0.15) 
+  dataset[[x]] = predict(bc, dataset[[x]])
+}
+str(numeric_columns)
+```
+
+# Train, test splitting
+
+For facilitating the data cleaning and feature engineering we merged train and test datasets. We now split them again to create our final model.
+
+```{r Train test split}
+fe_training <- dataset[1:1460,]
+fe_test <- dataset[1461:2919,]
+```
+
+# Lasso Regression
+
+```{r Lasso Regression, warning=FALSE}
+set.seed(123)
+lasso <- cv.glmnet(x = data.matrix(fe_training[, - which(names(fe_training) %in% c('SalePrice'))]), y = fe_training$SalePrice, nfolds = 10)
+plot(lasso)
+```
+
+As seen in the figure, lambda min is close to 0. In particular it is equal to:
+
+```{r}
+lasso$lambda.min
+```
+
+Cross-Validated error (RMSE)
+
+```{r}
+sqrt(lasso$cvm[lasso$lambda == lasso$lambda.min])
+```
+
+# Final Submission
+
+Final submission using lasso.
+
+```{r Final Submission}
+set.seed(46)
+lasso <-  cv.glmnet(x = data.matrix(fe_training[, - which(names(fe_training) %in% c('SalePrice'))]), y = fe_training$SalePrice, nfolds = 10)
+lasso_pred <- as.numeric(exp(predict(lasso, newx = data.matrix(fe_test[, - which(names(fe_test) %in% c('SalePrice'))]), s = "lambda.min"))-1)
+hist(lasso_pred, main="Histogram of Lasso Predictions", xlab = "Predictions")
+lasso_submission <- data.frame(Id = test_data$Id, SalePrice= (lasso_pred))
+colnames(lasso_submission) <-c("Id", "SalePrice")
+write.csv(lasso_submission, file = "lasso_submission.csv", row.names = FALSE) 
+```
+
+# Kaggle Submission
+
+I was able to improve the scroe in my second submission using different data cleaning and wrangling along with lasso regression. Please find my kaggle user and score for both submission.
+
+![](./Kaggle Submission.JPG)
+
+![](./Kaggle Submission 02.JPG)
+
+
