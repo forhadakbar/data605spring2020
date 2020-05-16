@@ -7,3 +7,6 @@ Kaggle Submission.jpg: Screen shot of kaggle submission
 Kaggle Submission 02: Screen shot of final kaggle submission  
 kaggle.csv result result for 1st kaggle submission  
 lasso_submission.csv result for final kaggle submission  
+
+
+Youtube Link: https://youtu.be/R7U9JuL5BPc
